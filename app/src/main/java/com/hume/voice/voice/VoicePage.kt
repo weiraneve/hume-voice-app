@@ -1,12 +1,65 @@
 package com.hume.voice.voice
 
+import android.Manifest
+import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionStatus
+import com.google.accompanist.permissions.rememberPermissionState
 import org.koin.androidx.compose.getViewModel
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun VoicePage(
     voiceViewModel: VoiceViewModel = getViewModel(),
 ) {
-    Text("Voice page")
+    val context = LocalContext.current
+    val permissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
+    val isRecording by voiceViewModel.isRecording.collectAsState()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Button(
+                onClick = {
+                    when (permissionState.status) {
+                        PermissionStatus.Granted -> {
+                            if (isRecording) {
+                                val isSuccess = voiceViewModel.stopRecording()
+                                if (!isSuccess) {
+                                    Toast.makeText(context, "录音失败，请重试", Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                voiceViewModel.startRecording(context.cacheDir)
+                            }
+                        }
+
+                        is PermissionStatus.Denied -> {
+                            permissionState.launchPermissionRequest()
+                        }
+                    }
+                }
+            ) {
+                Text(if (isRecording) "停止录音" else "开始录音")
+            }
+        }
+    }
 }
