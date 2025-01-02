@@ -25,6 +25,7 @@ fun VoicePage(
     val context = LocalContext.current
     val permissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
     val isRecording by voiceViewModel.isRecording.collectAsState()
+    val messages by voiceViewModel.messages.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -55,6 +56,13 @@ fun VoicePage(
                 }
             ) {
                 Text(if (isRecording) "停止录音" else "开始录音")
+            }
+
+            if (messages.isNotEmpty()) {
+                Text(
+                    text = messages,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
             }
         }
     }
