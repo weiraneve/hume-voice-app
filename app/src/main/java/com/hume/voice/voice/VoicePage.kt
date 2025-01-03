@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -27,6 +28,10 @@ fun VoicePage(
     val isRecording by voiceViewModel.isRecording.collectAsState()
     val messages by voiceViewModel.messages.collectAsState()
 
+    LaunchedEffect(Unit) {
+        voiceViewModel.setCacheDir(context.cacheDir)
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -42,10 +47,10 @@ fun VoicePage(
                             if (isRecording) {
                                 val isSuccess = voiceViewModel.stopRecording()
                                 if (!isSuccess) {
-                                    Toast.makeText(context, "录音失败，请重试", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "录音停止失败，请重试", Toast.LENGTH_SHORT).show()
                                 }
                             } else {
-                                voiceViewModel.startRecording(context.cacheDir)
+                                voiceViewModel.startRecording()
                             }
                         }
 
