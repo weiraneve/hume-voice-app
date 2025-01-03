@@ -63,6 +63,12 @@ fun VoicePage(
                 Text(if (isRecording) "停止录音" else "开始录音")
             }
 
+            Button(
+                onClick = { voiceViewModel.cleanUpConnection() }
+            ) {
+                Text("中断WebSocket")
+            }
+
             if (messages.isNotEmpty()) {
                 Text(
                     text = messages,

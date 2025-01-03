@@ -180,4 +180,10 @@ class VoiceViewModel : ViewModel() {
     fun setCacheDir(dir: File) {
         cacheDir = dir
     }
+
+    fun cleanUpConnection() {
+        stopRecording()
+        webSocketManager.disconnect()
+        Log.d(TAG, "Cleaning up connection")
+    }
 }
