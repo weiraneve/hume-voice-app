@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.hume.voice.voice.VoicePage
+import com.hume.voice.voice.HumePage
 import org.koin.compose.KoinContext
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KoinContext {
-                VoicePage()
+                HumePage()
             }
         }
     }
