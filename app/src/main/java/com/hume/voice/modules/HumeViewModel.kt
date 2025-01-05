@@ -1,4 +1,4 @@
-package com.hume.voice.voice
+package com.hume.voice.modules
 
 import androidx.lifecycle.ViewModel
 import com.hume.voice.common.obj.Constants

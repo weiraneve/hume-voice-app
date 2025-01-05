@@ -1,4 +1,4 @@
-package com.hume.voice.voice
+package com.hume.voice.modules
 
 import android.annotation.SuppressLint
 import android.webkit.WebView
