@@ -1,14 +1,16 @@
 package com.hume.voice.modules
 
 import android.annotation.SuppressLint
+import android.webkit.PermissionRequest
+import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import com.hume.voice.common.network.WebAppInterface
 import org.koin.androidx.compose.getViewModel
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -16,21 +18,27 @@ import org.koin.androidx.compose.getViewModel
 fun HumePage(
     humeViewModel: HumeViewModel = getViewModel(),
 ) {
-    val currentUrl by humeViewModel.webUrl.collectAsState()
+    val currentUrl = humeViewModel.webUrl.collectAsState()
 
     AndroidView(
-        modifier = Modifier.fillMaxSize(),
         factory = { context ->
             WebView(context).apply {
-                webViewClient = WebViewClient()
                 settings.apply {
                     javaScriptEnabled = true
                     domStorageEnabled = true
+                    mediaPlaybackRequiresUserGesture = false
                 }
+
+                addJavascriptInterface(WebAppInterface(context), "Android")
+                webViewClient = WebViewClient()
+                webChromeClient = object : WebChromeClient() {
+                    override fun onPermissionRequest(request: PermissionRequest) {
+                        request.grant(request.resources)
+                    }
+                }
+                loadUrl(currentUrl.value)
             }
         },
-        update = { webView ->
-            webView.loadUrl(currentUrl)
-        }
+        modifier = Modifier.fillMaxSize()
     )
 }
