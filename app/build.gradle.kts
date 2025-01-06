@@ -62,7 +62,7 @@ dependencies {
     implementation (libs.koin.android)
     implementation(libs.koin.android.compose)
     implementation(libs.accompanist.permissions)
-    implementation(libs.okhttp)
+    implementation(libs.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
