@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
-import com.hume.voice.common.network.WebAppInterface
 import org.koin.androidx.compose.getViewModel
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -29,7 +28,6 @@ fun HumePage(
                     mediaPlaybackRequiresUserGesture = false
                 }
 
-                addJavascriptInterface(WebAppInterface(context), "Android")
                 webViewClient = WebViewClient()
                 webChromeClient = object : WebChromeClient() {
                     override fun onPermissionRequest(request: PermissionRequest) {
