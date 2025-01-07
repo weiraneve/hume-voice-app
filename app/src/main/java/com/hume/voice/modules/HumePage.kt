@@ -30,15 +30,15 @@ fun HumePage(
     humeViewModel: HumeViewModel = getViewModel(),
 ) {
     val currentUrl = humeViewModel.webUrl.collectAsState()
-    val messages = humeViewModel.messages.collectAsState().value
+    val messages = humeViewModel.messages.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .weight(0.9f)
         ) {
-            items(messages) { message ->
+            items(messages.value) { message ->
                 MessageItem(message)
             }
         }
@@ -46,7 +46,7 @@ fun HumePage(
         AndroidView(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .weight(0.1f),
             factory = { context ->
                 WebView(context).apply {
                     settings.apply {
