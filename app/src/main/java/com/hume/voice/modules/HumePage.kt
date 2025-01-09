@@ -1,10 +1,11 @@
 package com.hume.voice.modules
 
+import android.Manifest
 import android.annotation.SuppressLint
-import android.webkit.PermissionRequest
-import android.webkit.WebChromeClient
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.content.pm.PackageManager
+import android.webkit.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,12 +15,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import com.hume.voice.common.network.WebAppInterface
 import com.hume.voice.common.obj.HumeMessage
 import org.koin.androidx.compose.getViewModel
@@ -29,44 +31,76 @@ import org.koin.androidx.compose.getViewModel
 fun HumePage(
     humeViewModel: HumeViewModel = getViewModel(),
 ) {
-    val currentUrl = humeViewModel.webUrl.collectAsState()
-    val messages = humeViewModel.messages.collectAsState()
+    val context = LocalContext.current
+    var permissionsGranted by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.9f)
-        ) {
-            items(messages.value) { message ->
-                MessageItem(message)
-            }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        permissionsGranted = permissions.all { it.value }
+    }
+
+    LaunchedEffect(Unit) {
+        val hasAudioPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasAudioPermission) {
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.RECORD_AUDIO,
+                    Manifest.permission.MODIFY_AUDIO_SETTINGS
+                )
+            )
+        } else {
+            permissionsGranted = true
         }
+    }
 
-        AndroidView(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.1f),
-            factory = { context ->
-                WebView(context).apply {
-                    settings.apply {
-                        javaScriptEnabled = true
-                        domStorageEnabled = true
-                        mediaPlaybackRequiresUserGesture = false
-                    }
+    if (permissionsGranted) {
+        val currentUrl = humeViewModel.webUrl.collectAsState()
+        val messages = humeViewModel.messages.collectAsState()
 
-                    addJavascriptInterface(WebAppInterface(humeViewModel), "Android")
+        Column(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.9f)
+            ) {
+                items(messages.value) { message ->
+                    MessageItem(message)
+                }
+            }
 
-                    webViewClient = WebViewClient()
-                    webChromeClient = object : WebChromeClient() {
-                        override fun onPermissionRequest(request: PermissionRequest) {
-                            request.grant(request.resources)
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(0.1f),
+                factory = { context ->
+                    WebView(context).apply {
+                        settings.apply {
+                            javaScriptEnabled = true
+                            domStorageEnabled = true
+                            mediaPlaybackRequiresUserGesture = false
                         }
-                    }
 
-                    // 注入 JavaScript 代码来监听 WebSocket 消息
-                    evaluateJavascript(
-                        """
+                        addJavascriptInterface(WebAppInterface(humeViewModel), "Android")
+
+                        webViewClient = WebViewClient()
+                        webChromeClient = object : WebChromeClient() {
+                            override fun onPermissionRequest(request: PermissionRequest) {
+                                val resources = arrayOf(
+                                    PermissionRequest.RESOURCE_AUDIO_CAPTURE,
+                                    PermissionRequest.RESOURCE_VIDEO_CAPTURE
+                                )
+                                request.grant(resources)
+                            }
+                        }
+
+                        // 注入 JavaScript 代码来监听 WebSocket 消息
+                        evaluateJavascript(
+                            """
                         console.log('Setting up message listener');
                         window.addEventListener('message', function(event) {
                             console.log('Message received:', event.data);
@@ -77,12 +111,13 @@ fun HumePage(
                         });
                         console.log('Message listener setup complete');
                     """.trimIndent(), null
-                    )
+                        )
 
-                    loadUrl(currentUrl.value)
+                        loadUrl(currentUrl.value)
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 }
 
